@@ -1,0 +1,7 @@
+.env
+.env.local
+*.secret
+credentials/
+private/
+.DS_Store
+Thumbs.db
