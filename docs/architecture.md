@@ -2,7 +2,12 @@
 
 ## Overview
 
-The project contains two independent n8n workflows connected through the same Pinecone index and namespace.
+The repository demonstrates two RAG implementations in n8n:
+
+1. Pinecone-based architecture with separate ingestion and retrieval workflows.
+2. Supabase-based architecture with ingestion and retrieval combined in one workflow.
+
+## Pinecone variant
 
 ### Ingestion
 
@@ -18,14 +23,7 @@ OpenAI Embeddings
 Pinecone Vector Store
 ```
 
-Each document receives metadata:
-
-- `source`
-- `date`
-- `department`
-- `role`
-
-The current sample knowledge base contains synthetic company rules about returns, delivery incidents and sales permissions.
+Each document receives metadata such as `source`, `date`, `department` and `role`.
 
 ### Retrieval
 
@@ -38,15 +36,13 @@ AI Agent
          └── OpenAI Embeddings
 ```
 
-The vector store is attached to the AI Agent as a tool in `Retrieve Documents (As Tool for AI Agent)` mode.
+The vector store is attached to the AI Agent in `Retrieve Documents (As Tool for AI Agent)` mode.
 
-The agent system prompt forces retrieval for questions about internal company policies and prevents unsupported answers from general model knowledge.
+The agent is instructed to use retrieved knowledge for internal-policy questions and avoid unsupported answers.
 
-## Critical configuration
+### Critical Pinecone configuration
 
-The most common source of retrieval failure is a mismatch between ingestion and retrieval configuration.
-
-Both workflows must use the same:
+Ingestion and retrieval must use the same:
 
 ```text
 Pinecone index
@@ -61,15 +57,36 @@ Index: rag-knowledge-base
 Namespace: demo
 ```
 
-## Why two workflows
+## Supabase variant
 
-Separating ingestion from retrieval makes the design easier to operate:
+```text
+Ingestion branch:
+Manual Trigger
+  → Default Data Loader
+  → OpenAI Embeddings
+  → Supabase Vector Store
 
-- the knowledge base can be updated independently;
-- chat queries do not re-index documents;
-- ingestion can later be triggered by file uploads, schedules or external storage;
-- retrieval remains fast and focused on user requests.
+Retrieval branch:
+Chat Trigger
+  → AI Agent
+     ├── OpenAI Chat Model
+     ├── Simple Memory
+     └── Supabase Vector Store tool
+          └── OpenAI Embeddings
+```
+
+The Supabase example uses a `documents` table and a `match_documents` query function for vector similarity search.
+
+This variant demonstrates that the same RAG pattern can be implemented with a PostgreSQL/pgvector-backed vector store rather than Pinecone.
+
+## Why keep both variants
+
+The two implementations demonstrate the same core retrieval pattern with different storage backends:
+
+- Pinecone is shown as a dedicated managed vector database.
+- Supabase is shown as a PostgreSQL-based alternative with vector search.
+- The retrieval layer can be changed without changing the overall AI-agent architecture.
 
 ## Portfolio note
 
-This repository uses synthetic demo regulations rather than private company data.
+The repository contains sanitized workflow exports and synthetic demo knowledge rather than private company data. Credential references and instance-specific identifiers are removed before publication.
