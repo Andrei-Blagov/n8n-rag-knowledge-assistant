@@ -1,0 +1,120 @@
+{
+  "name": "RAG Supabase — Ingestion + Retrieval",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [0, 0],
+      "name": "When chat message received"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Ты — консультант по продукту «AI-ассистент для бизнеса (RAG-платформа)».\n\nДля вопросов о возможностях продукта, сценариях применения, внедрении, целевой аудитории, возражениях и демонстрации обязательно используй Supabase Vector Store.\n\nОтвечай только на основе найденных фрагментов базы знаний. Если данных недостаточно, прямо сообщи об этом и не придумывай отсутствующую информацию."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [208, 0],
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.4-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5.4-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [96, 256],
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [928, 0],
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {"__rl": true, "value": "documents", "mode": "list", "cachedResultName": "documents"},
+        "options": {"queryName": "match_documents"}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [1216, 0],
+      "name": "Supabase Vector Store — Ingestion"
+    },
+    {
+      "parameters": {"options": {"dimensions": "={{ 384 }}"}},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [1200, 208],
+      "name": "OpenAI Embeddings — Ingestion"
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "Инструкция для менеджера по продажам: продукт “AI-ассистент для бизнеса (RAG-платформа)”\n\n1. Краткое описание продукта\n\nAI-ассистент на базе RAG (Retrieval-Augmented Generation) — это система, которая отвечает на вопросы, используя внутренние данные компании: документы, базы знаний, CRM, инструкции и т.д.\nВ отличие от обычных AI, он не “выдумывает”, а опирается на реальные данные клиента.\n\n2. Ключевая ценность для клиента\n\nБыстрый доступ к знаниям компании\nСнижение нагрузки на сотрудников\nУменьшение ошибок из-за человеческого фактора\nАвтоматизация ответов клиентам и внутри команды\n\n3. Основные функции\nОтветы на вопросы по внутренним документам\nПоиск информации в базе знаний\nПоддержка клиентов (чат, Telegram, сайт)\nПомощь сотрудникам (инструкции, регламенты)\nИнтеграция с CRM, Google Drive, Notion и др.\n\n4. Кому продавать\nИнтернет-магазины\nСервисы и SaaS\nКомпании с большим количеством инструкций\nПоддержка клиентов (call-центры)\nОбучающие проекты\n\n5. Типовые боли клиента\nСотрудники долго ищут информацию\nНовички долго обучаются\nКлиенты задают одни и те же вопросы\nДокументы есть, но ими не пользуются\n\n6. Пример использования\nКлиент спрашивает: «Какие условия возврата товара?»\nAI-ассистент находит нужный документ, извлекает релевантный кусок и даёт точный ответ.\n\n7. Как демонстрировать\nЗадаёшь вопрос → ассистент отвечает → показываешь источник.\n\n8. Частые возражения\n«AI будет ошибаться» → Он отвечает только на основе ваших данных.\n«У нас уже есть база знаний» → Здесь всё в одном окне и с поиском.\n«Это сложно внедрить» → Подключение можно выполнять поэтапно без сложной разработки.\n\n9. Следующий шаг\nПодключить 2–3 тестовых документа и провести демо на реальных вопросах клиента.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [1392, 208],
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Используй эту базу для ответов на вопросы. Отвечай строго на основе найденных фрагментов.",
+        "tableName": {"__rl": true, "value": "documents", "mode": "list", "cachedResultName": "documents"},
+        "topK": 1,
+        "includeDocumentMetadata": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [464, 256],
+      "name": "Supabase Vector Store — Retrieval"
+    },
+    {
+      "parameters": {"options": {"dimensions": "={{ 384 }}"}},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [464, 416],
+      "name": "OpenAI Embeddings — Retrieval"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [256, 256],
+      "name": "Simple Memory"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {"main": [[{"node": "AI Agent", "type": "main", "index": 0}]]},
+    "OpenAI Chat Model": {"ai_languageModel": [[{"node": "AI Agent", "type": "ai_languageModel", "index": 0}]]},
+    "When clicking ‘Execute workflow’": {"main": [[{"node": "Supabase Vector Store — Ingestion", "type": "main", "index": 0}]]},
+    "OpenAI Embeddings — Ingestion": {"ai_embedding": [[{"node": "Supabase Vector Store — Ingestion", "type": "ai_embedding", "index": 0}]]},
+    "Default Data Loader": {"ai_document": [[{"node": "Supabase Vector Store — Ingestion", "type": "ai_document", "index": 0}]]},
+    "Supabase Vector Store — Retrieval": {"ai_tool": [[{"node": "AI Agent", "type": "ai_tool", "index": 0}]]},
+    "OpenAI Embeddings — Retrieval": {"ai_embedding": [[{"node": "Supabase Vector Store — Retrieval", "type": "ai_embedding", "index": 0}]]},
+    "Simple Memory": {"ai_memory": [[{"node": "AI Agent", "type": "ai_memory", "index": 0}]]}
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1"},
+  "nodeGroups": [],
+  "tags": []
+}
